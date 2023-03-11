@@ -1,0 +1,312 @@
+# Click the Variables button, above, to create your own variables.
+# GET ${exampleVariable1} // _search
+#{
+#  "query": {
+#    "${exampleVariable2}": {} // match_all
+#  }
+#}
+
+GET /_cluster/health
+
+GET /_cat/nodes?v
+
+GET /_cat/indices?v&expand_wildcards=all
+
+GET /_cat/shards?v
+
+GET /products
+
+DELETE /products
+
+PUT /products
+{
+  "settings": {
+    "number_of_shards": 2
+  }
+}
+
+POST /products/_doc
+{
+  "name": "Coffee Maker",
+  "price": 64,
+  "in_stock": 10
+}
+
+PUT /products/_doc/100
+{
+  "name": "Toaster",
+  "price": 49,
+  "in_stock": 4
+}
+
+POST /products/_update/100
+{
+  "doc": {
+    "in_stock": 3,
+    "tags": ["electronics"]
+  }
+}
+
+POST /products/_update/100
+{
+  "script": {
+    "source": "ctx._source.in_stock = 15"
+  }
+}
+
+POST /products/_update/100
+{
+  "script": {
+    "source": "ctx._source.in_stock -= params.quantity",
+    "params": {
+      "quantity": 4
+    }
+  }
+}
+
+GET products/_doc/100
+
+POST /products/_update/101
+{
+  "script": {
+    "source": "ctx._source.in_stock++"
+  },
+  "upsert": {
+    "name": "Sandwich Maker",
+    "price": 500,
+    "in_stock": 5
+  }
+}
+
+GET /products/_doc/101
+
+PUT /products/_doc/100
+{
+  "name": "Toaster",
+  "price": 78,
+  "in_stock": 4
+}
+
+GET /products/_doc/100
+
+POST /products/_update/100?if_primary_term=1&if_seq_no=15
+{
+  "doc": {
+    "in_stock": 123
+  }
+}
+
+GET /products/_search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+POST /products/_update_by_query
+{
+  "conflicts": "proceed", 
+  "query": {
+    "match_all": {}
+  },
+  "script": {
+    "source": "ctx._source.in_stock--"
+  }
+}
+
+POST /products/_delete_by_query
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+POST /_bulk
+{ "index": { "_index": "products", "_id": 200 } }
+{ "name": "Espresso Machine", "price": 199, "in_stock": 5 }
+{"create": {"_index": "products", "_id": 201 } }
+{"name": "Milk Frother", "price": 149, "in_stock": 14 }
+
+POST /products/_bulk
+{ "update": {"_id": 201}}
+{ "doc": {"price": 129} }
+{ "delete": {"_id": 200} }
+
+
+
+
+POST /_analyze
+{
+  "text": "2 guys walk into   a bar, but the third... DUCKS! :-)",
+  "analyzer": "standard"
+}
+
+POST /_analyze
+{
+  "text": "2 guys walk into   a bar, but the third... DUCKS! :-)",
+  "analyzer": "keyword"
+}
+
+POST /_analyze
+{
+  "text": "2 guys walk into   a bar, but the third... DUCKS! :-)",
+  "char_filter": [],
+  "tokenizer": "standard",
+  "filter": ["lowercase"]
+}
+
+POST /_analyze
+{
+  "text": ["Strings are simply", "merged together."],
+  "analyzer": "standard"
+}
+
+
+PUT /coercion_test/_doc/1
+{
+  "price": 7.4
+}
+
+PUT /coercion_test/_doc/2
+{
+  "price": "7.4"
+}
+
+PUT /coercion_test/_doc/3
+{
+  "price": "7.4m"
+}
+
+
+GET /coercion_test/_doc/2
+
+
+// 45. Adding explicit mappings
+PUT /reviews
+{
+  "mappings": {
+    "properties": {
+      "rating": { "type": "float" },
+      "content": { "type": "text" },
+      "product_id": { "type": "integer" },
+      "author": {
+        "properties": {
+          "first_name": { "type": "text" },
+          "last_name": { "type": "text" },
+          "email": { "type": "keyword" }
+        }
+      }
+    }
+  }
+}
+
+
+PUT /reviews/_doc/1
+{
+  "rating": 5.0,
+  "content": "Outstanding course! Bo really taught me a lot about ElasticSearch!",
+  "product_id": 123,
+  "author": {
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": "johndoe123example.com"
+  }
+}
+
+
+// 46. Retrieving mappings
+GET /reviews/_mapping
+GET /reviews/_mapping/field/content
+GET /reviews/_mapping/field/author.email
+
+// 47. Using dot notation in field names
+PUT /reviews_dot_notation
+{
+  "mappings": {
+    "properties": {
+      "rating": { "type": "float" },
+      "content": { "type": "text" },
+      "product_id": { "type": "integer" },
+      "author.first_name": { "type": "text" },
+      "author.last_name": { "type": "text" },
+      "author.email": { "type": "keyword" }
+    }
+  }
+}
+
+GET /reviews_dot_notation/_mapping
+
+
+// 48. Adding mappings to existing indices
+PUT /reviews/_mapping
+{
+  "properties": {
+    "created_at": {
+      "type": "date"
+    }
+  }
+}
+
+GET /reviews/_mapping
+
+// 49. How dates work in Elasticsearch
+PUT /reviews/_doc/2
+{
+  "rating": 4.5,
+  "content": "Not bad. Not bad at all!",
+  "product_id": 123,
+  "created_at": "2015-03-27",
+  "author": {
+    "first_name": "Average",
+    "last_name": "Joe",
+    "email": "avgjoe@example.com"
+  }
+}
+
+
+PUT /reviews/_doc/3
+{
+  "rating": 3.5,
+  "content": "Could be better",
+  "product_id": 123,
+  "created_at": "2015-01-28T09:21:51Z",
+  "author": {
+    "first_name": "Spencer",
+    "last_name": "Pearson",
+    "email": "spearshon@example.com"
+  }
+}
+
+PUT /reviews/_doc/4
+{
+  "rating": 5.0,
+  "content": "Very useful",
+  "product_id": 123,
+  "created_at": "2015-01-28T09:21:51+01:00",
+  "author": {
+    "first_name": "Adam",
+    "last_name": "Jones",
+    "email": "adam.jones@example.com"
+  }
+}
+
+PUT /reviews/_doc/5
+{
+  "rating": 5.0,
+  "content": "Very useful",
+  "product_id": 123,
+  "created_at": 1436011284000,
+  "author": {
+    "first_name": "Taylor",
+    "last_name": "West",
+    "email": "twest@example.com"
+  }
+}
+
+GET /reviews/_search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
