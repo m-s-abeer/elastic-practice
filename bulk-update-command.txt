@@ -1,0 +1,1 @@
+curl --cacert ca.crt -H "Content-Type: application/x-ndjson" -XPOST https://localhost:9200/products/_bulk --data-binary "@products-bulk.json" -u elastic:abeermsa
